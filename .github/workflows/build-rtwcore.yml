@@ -1,0 +1,30 @@
+name: Experimental RTWCore build
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: recipe
+      - uses: actions/checkout@v4
+        with:
+          repository: souissiak1-maker/AirportRTW
+          ref: 91f1c8a28d39e23ae70088a4224a0f7546810bca
+          path: source
+      - name: Build experimental x86_64 kext
+        run: bash recipe/build_rtwcore.sh "$GITHUB_WORKSPACE/source"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: RTWCore-experimental-build
+          path: |
+            source/build/experimental-rtwcore/build.log
+            source/build/experimental-rtwcore/undefined-symbols.txt
+            source/build/experimental-rtwcore/products/Release/RTWCore.kext
+          if-no-files-found: error
+          retention-days: 7
