@@ -18,6 +18,17 @@ if phase not in target:
     text = text[:start] + target + text[end:]
 project.write_text(text)
 
+# RTWCore still includes a removed Intel umbrella header. Include the
+# declarations actually used by RTWCore and its power-management unit.
+header = root / 'rtw/RTWCore.hpp'
+contents = header.read_text()
+obsolete = '#include "itlhdr.h"'
+replacement = '#include <net80211/ieee80211_ioctl.h>\n#include <sys/CTimeout.hpp>'
+assert obsolete in contents or replacement in contents, 'Unexpected RTWCore header'
+if obsolete in contents:
+    contents = contents.replace(obsolete, replacement, 1)
+    header.write_text(contents)
+
 # Do not distribute upstream example networks or passwords in the build.
 info_path = root / 'rtw/Info.plist'
 info = plistlib.loads(info_path.read_bytes())
