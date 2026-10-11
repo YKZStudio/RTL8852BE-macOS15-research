@@ -28,7 +28,7 @@ jobs:
       - name: Prepare Lilu headers and library
         working-directory: upstream
         run: |
-          curl -fL --retry 3 -o lilu.zip https://github.com/acidanthera/Lilu/releases/download/1.7.3/Lilu-1.7.3-DEBUG.zip
+          curl -fL --retry 3 -o lilu.zip https://github.com/acidanthera/Lilu/releases/download/1.7.2/Lilu-1.7.2-DEBUG.zip
           unzip -q lilu.zip
           test -f Lilu.kext/Contents/Resources/Headers/kern_api.hpp
       - name: Build debug driver
