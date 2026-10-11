@@ -1,0 +1,80 @@
+name: Experimental Senary 1F87 audio
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/build-senary-audio.yml'
+      - 'audio/**'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: acidanthera/AppleALC
+          ref: ff01db21749271916d44605503499ceaa61d94b2
+          path: upstream
+      - uses: actions/checkout@v4
+        with:
+          repository: acidanthera/MacKernelSDK
+          ref: 3f750085caa17ec3a7880f11c11bf4f48cd6a164
+          path: upstream/MacKernelSDK
+      - name: Prepare experimental codec
+        run: python3 audio/prepare_senary.py upstream
+      - name: Prepare Lilu headers and library
+        working-directory: upstream
+        run: |
+          curl -fL --retry 3 -o lilu.zip https://github.com/acidanthera/Lilu/releases/download/1.7.2/Lilu-1.7.2-DEBUG.zip
+          unzip -q lilu.zip
+          test -f Lilu.kext/Contents/Resources/Headers/kern_api.hpp
+      - name: Build debug driver
+        working-directory: upstream
+        shell: bash
+        run: |
+          set -o pipefail
+          xcodebuild -project AppleALC.xcodeproj -scheme AppleALC -configuration Debug -arch x86_64 -derivedDataPath build CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ../audio-build.log
+      - name: Verify and package
+        shell: bash
+        run: |
+          set -euo pipefail
+          kext=upstream/build/Build/Products/Debug/AppleALC.kext
+          test -f "$kext/Contents/MacOS/AppleALC"
+          xcrun lipo "$kext/Contents/MacOS/AppleALC" -verify_arch x86_64
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+          p = plistlib.loads(Path("upstream/build/Build/Products/Debug/AppleALC.kext/Contents/Info.plist").read_bytes())
+          matches = []
+          def scan(n):
+              if isinstance(n, dict):
+                  if n.get("CodecID") == 0x14F11F87:
+                      matches.append(n.get("LayoutID"))
+                  for v in n.values(): scan(v)
+              elif isinstance(n, list):
+                  for v in n: scan(v)
+          scan(p)
+          assert {15,21}.issubset(set(matches)), matches
+          print("Built kext contains 1F87 pin configurations:", matches)
+          text = Path("upstream/AppleALC/kern_resources.cpp").read_text()
+          assert "0x1F87" in text or "0x1f87" in text or "8071" in text
+          PY
+          mkdir -p artifact
+          ditto -c -k --sequesterRsrc --keepParent "$kext" artifact/AppleALC-Senary1F87-experimental.zip
+          cp audio/README.md artifact/
+          shasum -a 256 artifact/AppleALC-Senary1F87-experimental.zip > artifact/SHA256SUMS.txt
+      - name: Upload successful build
+        uses: actions/upload-artifact@v4
+        with:
+          name: AppleALC-Senary1F87-experimental
+          path: artifact/
+      - name: Upload diagnostic build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Senary1F87-build-log
+          path: audio-build.log
+          if-no-files-found: ignore
