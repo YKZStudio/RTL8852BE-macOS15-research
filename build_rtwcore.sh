@@ -23,7 +23,7 @@ xcodebuild -project AirportRTW.xcodeproj -target RTWCore \
   2>&1 | tee build/experimental-rtwcore/build.log
 kext="$PWD/build/experimental-rtwcore/products/Release/RTWCore.kext"
 test -f "$kext/Contents/MacOS/RTWCore"
-xcrun lipo -verify_arch x86_64 "$kext/Contents/MacOS/RTWCore"
+xcrun lipo "$kext/Contents/MacOS/RTWCore" -verify_arch x86_64
 xcrun nm -u "$kext/Contents/MacOS/RTWCore" > build/experimental-rtwcore/undefined-symbols.txt
 if grep -E 'IO80211|IOSkywalk|CCPipe' build/experimental-rtwcore/undefined-symbols.txt; then
   echo 'Unexpected native wireless framework references. Do not use this build.' >&2
