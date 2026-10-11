@@ -36,18 +36,18 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          xcodebuild -project AppleALC.xcodeproj -scheme AppleALC -configuration Debug -arch x86_64 CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ../audio-build.log
+          xcodebuild -project AppleALC.xcodeproj -scheme AppleALC -configuration Debug -arch x86_64 -derivedDataPath build CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ../audio-build.log
       - name: Verify and package
         shell: bash
         run: |
           set -euo pipefail
-          kext=upstream/build/Debug/AppleALC.kext
+          kext=upstream/build/Build/Products/Debug/AppleALC.kext
           test -f "$kext/Contents/MacOS/AppleALC"
           xcrun lipo "$kext/Contents/MacOS/AppleALC" -verify_arch x86_64
           python3 - <<'PY'
           import plistlib
           from pathlib import Path
-          p = plistlib.loads(Path("upstream/build/Debug/AppleALC.kext/Contents/Info.plist").read_bytes())
+          p = plistlib.loads(Path("upstream/build/Build/Products/Debug/AppleALC.kext/Contents/Info.plist").read_bytes())
           matches = []
           def scan(n):
               if isinstance(n, dict):
