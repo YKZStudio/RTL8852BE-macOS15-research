@@ -1,6 +1,11 @@
 name: Experimental RTWCore build
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - prepare_rtwcore.py
+      - build_rtwcore.sh
+      - .github/workflows/build-rtwcore.yml
 permissions:
   contents: read
 jobs:
@@ -21,10 +26,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: RTWCore-experimental-build
+          name: RTWCore-build-logs
           path: |
             source/build/experimental-rtwcore/build.log
             source/build/experimental-rtwcore/undefined-symbols.txt
-            source/build/experimental-rtwcore/products/Release/RTWCore.kext
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: RTWCore-experimental-build
+          path: source/build/experimental-rtwcore/products/Release/RTWCore.kext
           if-no-files-found: error
           retention-days: 7
