@@ -3,7 +3,7 @@
 This is an unqualified ID-match prototype for Redmi G 2022 / TIMI TM2135,
 macOS 15.8.1, codec 14F1:1F87 revision 0x100100, Intel controller 8086:51C8.
 
-It adds a separate codec resource to pinned upstream AppleALC 1.9.8.
+It adds a separate codec resource to upstream AppleALC pinned to ff01db21749271916d44605503499ceaa61d94b2.
 Original CX8070 support is retained. It adapts the AppleHDA codec patch,
 both layout CodecID values and pin configurations for layouts 15 and 21.
 Routing and initialization verbs are borrowed from CX8070 laptop profiles.
