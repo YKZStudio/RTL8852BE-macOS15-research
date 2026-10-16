@@ -40,7 +40,8 @@ jobs:
           strings experiment/NVRMFB.kext/Contents/MacOS/NVRMFB | grep -F 'nvfbhidpi'
           mkdir -p artifact
           ditto -c -k --sequesterRsrc --keepParent experiment/NVRMFB.kext artifact/NVRMFB-2.0.4-hidpi-experimental.zip
-          cp display-research/README.md NVRMFB-hidpi.patch artifact/
+          cp display-research/README.md display-research/check_framebuffer.sh NVRMFB-hidpi.patch artifact/
+          shasum -a 256 experiment/NVRMFB.kext/Contents/MacOS/NVRMFB experiment/NVRMFB.kext/Contents/Info.plist | sed 's|experiment/||' > artifact/PAYLOAD-SHA256.txt
           shasum -a 256 artifact/NVRMFB-2.0.4-hidpi-experimental.zip > artifact/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
