@@ -30,8 +30,12 @@ end_old = "const NvU64 rEnd = onScanout ? fPhys + fSize : fConsPhys + fConsSize;
 end_new = "const NvU64 rEnd = onScanout ? fPhys + scanoutBytes : fConsPhys + fConsSize;"
 assert patched.count(guard_old) == 1 and patched.count(end_old) == 1
 patched = patched.replace(guard_old, guard_new).replace(end_old, end_new)
+mode_anchor = '    setProperty("NVRMRefreshModesAdded", (unsigned long long)added, 32);'
+assert patched.count(mode_anchor) == 1, "Refresh-mode insertion point changed"
+mode_code = (Path(__file__).parent / "hidpi60_modes.cpp.inc").read_text()
+patched = patched.replace(mode_anchor, mode_code + mode_anchor)
 path.write_text(patched)
 patch = "".join(difflib.unified_diff(source.splitlines(True), patched.splitlines(True),
     fromfile="a/kexts/NVRMFB/fb/nvrm-fb.cpp", tofile="b/kexts/NVRMFB/fb/nvrm-fb.cpp"))
 Path("NVRMFB-hidpi.patch").write_text(patch)
-print("Prepared opt-in source cap experiment; allocation fallback and mode validation retained")
+print("Prepared opt-in source cap and explicit 60 Hz mode experiments; mode validation retained")

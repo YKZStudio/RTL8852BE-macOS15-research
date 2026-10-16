@@ -50,7 +50,7 @@ if [ "$mode" = --restore ]; then
   [ "$(cat "$backup/macos-build")" = "$(sw_vers -buildVersion)" ] || die 'Backup belongs to a different macOS build'
   restore_files || die "Restore failed; retain $backup and use the existing driver recovery entry"
   echo "RESTORED from $backup"
-  echo 'Remove nvfbhidpi=1 from your startup config if present, then restart.'
+  echo 'Remove nvfbhidpi=1 and nvfbhidpi60=1 from your startup config if present, then restart.'
   exit 0
 fi
 [ -f "$here/check_framebuffer.sh" ] || die 'Keep check_framebuffer.sh in this folder'
@@ -93,5 +93,5 @@ mv -f "$newkc" "$kc"
 newkc=''; writing=0
 echo "INSTALL OK. Backup retained: $backup"
 echo 'The currently running driver is unchanged until restart.'
-echo 'Enable nvfbhidpi=1 in the actual startup OpenCore config, then restart.'
-echo 'First test 1600x1000 HiDPI at 60 Hz. No automatic restart was performed.'
+echo 'Keep nvfbhidpi=1 and add nvfbhidpi60=1 in the actual startup OpenCore config, then restart.'
+echo 'Select the 1707x1067 HiDPI entry explicitly marked 60 Hz. No automatic restart was performed.'
