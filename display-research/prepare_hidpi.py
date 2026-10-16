@@ -23,6 +23,13 @@ new = """    const NvU32 rasterMaxW = mw;
     const NvU64 mp_ = ((NvU64)mw * 4 + pitchAlign - 1) & ~((NvU64)pitchAlign - 1);"""
 assert source.count(old) == 1, "Pinned source changed; refusing an ambiguous patch"
 patched = source.replace(old, new)
+guard_old = "        bool onScanout = p && fPhys  && fSize     && p < (fPhys + fSize)         && (p + want) > fPhys;"
+guard_new = """        const NvU64 scanoutBytes = fMemBytes ? fMemBytes : fSize;
+        bool onScanout = p && fPhys && scanoutBytes && p < (fPhys + scanoutBytes) && (p + want) > fPhys;"""
+end_old = "const NvU64 rEnd = onScanout ? fPhys + fSize : fConsPhys + fConsSize;"
+end_new = "const NvU64 rEnd = onScanout ? fPhys + scanoutBytes : fConsPhys + fConsSize;"
+assert patched.count(guard_old) == 1 and patched.count(end_old) == 1
+patched = patched.replace(guard_old, guard_new).replace(end_old, end_new)
 path.write_text(patched)
 patch = "".join(difflib.unified_diff(source.splitlines(True), patched.splitlines(True),
     fromfile="a/kexts/NVRMFB/fb/nvrm-fb.cpp", tofile="b/kexts/NVRMFB/fb/nvrm-fb.cpp"))
